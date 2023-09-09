@@ -16,7 +16,6 @@ class Player(pygame.sprite.Sprite):
         self.animation_speed = 0.15
 
         self.direction = pygame.math.Vector2()
-        self.speed = 5.0
         self.attacking = False
         self.attack_cooldown = 400
         self.attack_time = None
@@ -26,8 +25,18 @@ class Player(pygame.sprite.Sprite):
         self.destroy_attack = destroy_attack
         self.weapon_index = 0
         self.weapon = list(weapon_data.keys())[self.weapon_index]
+        self.can_switch_weapon = True
+        self.weapon_switch_time = None
+        self.switch_duration_cooldown = 200
 
         self.obstacle_sprites = obstacle_sprites
+
+        self.stats = {'health': 100, 'energy': 60, 'attack': 10,'magic': 4,'speed': 5}
+        self.health = self.stats['health'] * 0.5
+        self.energy = self.stats['energy'] * 0.8
+        self.exp = 123
+        self.speed = self.stats['speed']
+
 
     def import_player_assets(self):
         character_path = '../graphics/player/'
@@ -71,6 +80,16 @@ class Player(pygame.sprite.Sprite):
             self.attacking = True
             print('magic')
 
+        if keys[pygame.K_n] and self.can_switch_weapon:
+            self.can_switch_weapon = False
+            self.weapon_switch_time = pygame.time.get_ticks()
+
+            if self.weapon_index < len(list(weapon_data.keys())) - 1:
+                self.weapon_index += 1
+            else:
+                self.weapon_index = 0
+
+            self.weapon = list(weapon_data.keys())[self.weapon_index]
 
         if self.direction.x*self.direction.y != 0:
             self.speed=5/1.41421356237
@@ -129,6 +148,10 @@ class Player(pygame.sprite.Sprite):
             if current_time - self.attack_time >= self.attack_cooldown:
                 self.attacking = False
                 self.destroy_attack()
+
+        if not self.can_switch_weapon:
+            if current_time - self.weapon_switch_time >= self.switch_duration_cooldown:
+                self.can_switch_weapon =True
 
     def animate(self):
         animation = self.animations[self.status]
